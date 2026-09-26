@@ -1,0 +1,6 @@
+{
+  "name": "WebDrop",
+  "description": "Fast, minimal cross-device sharing platform. Move files, links, text and photos between your devices in seconds.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
