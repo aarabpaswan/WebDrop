@@ -20,7 +20,8 @@ import {
   Clock,
   Send,
   Eye,
-  Trash2
+  Trash2,
+  Music
 } from 'lucide-react';
 import { WebDropLogo } from './WebDropLogo';
 import { BatteryIndicator } from './BatteryIndicator';
@@ -28,7 +29,7 @@ import { useLogos } from '../context/LogoContext';
 
 export interface SharedItem {
   id: string;
-  type: 'file' | 'photo' | 'text' | 'link';
+  type: 'file' | 'photo' | 'text' | 'link' | 'audio';
   senderRole: 'self' | 'peer';
   senderName: string;
   timestamp: number;
@@ -201,7 +202,7 @@ export const ConnectedView: React.FC<ConnectedViewProps> = ({
   });
 
   const filteredItems = deduplicatedItems.filter(item => {
-    if (activeTab === 'files') return item.type === 'file' || item.type === 'photo';
+    if (activeTab === 'files') return item.type === 'file' || item.type === 'photo' || item.type === 'audio';
     if (activeTab === 'text') return item.type === 'text' || item.type === 'link';
     return true;
   });
@@ -506,11 +507,14 @@ export const ConnectedView: React.FC<ConnectedViewProps> = ({
                       <div className={`flex h-10 w-10 items-center justify-center rounded-xl border shrink-0 ${
                         item.type === 'file'
                           ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200/60 dark:border-blue-900/40 text-blue-600 dark:text-blue-400'
+                          : item.type === 'audio'
+                          ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200/60 dark:border-amber-900/40 text-amber-600 dark:text-amber-400'
                           : item.type === 'link'
                           ? 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200/60 dark:border-indigo-900/40 text-indigo-600 dark:text-indigo-400'
                           : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-900/40 text-emerald-600 dark:text-emerald-400'
                       }`}>
                         {item.type === 'file' && <FileText className="w-4 h-4" />}
+                        {item.type === 'audio' && <Music className="w-4 h-4" />}
                         {item.type === 'photo' && <ImageIcon className="w-4 h-4" />}
                         {item.type === 'link' && <LinkIcon className="w-4 h-4" />}
                         {item.type === 'text' && <Type className="w-4 h-4" />}
@@ -534,14 +538,28 @@ export const ConnectedView: React.FC<ConnectedViewProps> = ({
                       </div>
 
                       {/* Content representation */}
-                      {item.type === 'file' || item.type === 'photo' ? (
+                      {item.type === 'file' || item.type === 'photo' || item.type === 'audio' ? (
                         <div>
                           <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">
                             {item.fileName}
                           </p>
-                          <p className="text-[11px] text-slate-400 font-mono">
-                            {formatFileSize(item.fileSize)}
+                          <p className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5 flex-wrap">
+                            <span>{formatFileSize(item.fileSize)}</span>
+                            {item.type === 'audio' && (
+                              <span className="inline-flex items-center gap-1 text-[10px] text-amber-600 dark:text-amber-400 font-bold before:content-['•'] before:mr-1">
+                                Audio track
+                              </span>
+                            )}
                           </p>
+                          {item.type === 'audio' && item.fileUrl && (
+                            <div className="mt-2 w-full max-w-xs sm:max-w-sm">
+                              <audio 
+                                src={item.fileUrl} 
+                                controls 
+                                className="w-full h-8 rounded-lg opacity-85 hover:opacity-100 transition"
+                              />
+                            </div>
+                          )}
                         </div>
                       ) : item.type === 'link' ? (
                         <div>
@@ -569,7 +587,7 @@ export const ConnectedView: React.FC<ConnectedViewProps> = ({
 
                   {/* Actions for this item */}
                   <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
-                    {(item.type === 'file' || item.type === 'photo') && item.fileUrl && (
+                    {(item.type === 'file' || item.type === 'photo' || item.type === 'audio') && item.fileUrl && (
                       <a
                         href={item.fileUrl}
                         download={item.fileName}

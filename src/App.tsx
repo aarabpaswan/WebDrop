@@ -354,6 +354,33 @@ export default function App() {
     }
   }, [connectionState, localBattery.level, localBattery.charging]);
 
+  // Global keyboard listener for typing "admin"
+  useEffect(() => {
+    let inputBuffer = '';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore keypress if user is actively writing inside inputs/textareas
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      inputBuffer += e.key.toLowerCase();
+      if (inputBuffer.length > 10) {
+        inputBuffer = inputBuffer.substring(inputBuffer.length - 10);
+      }
+
+      if (inputBuffer.endsWith('admin')) {
+        setActiveView('admin');
+        window.history.replaceState({}, '', '/admin');
+        showNotification('Admin Console unlocked!');
+        inputBuffer = '';
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Host starts "Connect Device"
   const handleStartConnectDevice = () => {
     const ws = connectWs();
@@ -576,9 +603,12 @@ export default function App() {
 
       setUploadProgress(100);
 
+      const isAudio = file.type.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(file.name);
+      const computedType = isAudio ? 'audio' : (isPhoto ? 'photo' : 'file');
+
       const item: SharedItem = {
         id: res.id,
-        type: isPhoto ? 'photo' : 'file',
+        type: computedType,
         senderRole: 'self',
         senderName: localName,
         timestamp: Date.now(),
@@ -596,7 +626,7 @@ export default function App() {
           type: 'send_item',
           payload: {
             id: res.id,
-            type: isPhoto ? 'photo' : 'file',
+            type: computedType,
             fileName: res.name,
             fileSize: res.size,
             fileUrl: res.url,
@@ -658,16 +688,10 @@ export default function App() {
       <nav className="w-full max-w-4xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
         <button 
           onClick={() => {
-            if (activeView === 'admin') {
-              setActiveView('transfer');
-              window.history.replaceState({}, '', '/');
-            } else {
-              setActiveView('admin');
-              window.history.replaceState({}, '', '/admin');
-            }
+            setActiveView('transfer');
+            window.history.replaceState({}, '', '/');
           }}
           className="flex items-center gap-2.5 text-left group"
-          title="Toggle Admin Console"
         >
           <WebDropLogo size={28} />
           <div className="flex items-center gap-1.5">
